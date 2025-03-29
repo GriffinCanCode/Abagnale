@@ -1,0 +1,17 @@
+{
+  "": {
+    "swift-dependencies": "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/master.swiftdeps"
+  },
+  "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/AbagnaleApp.swift": {
+    "dependencies": "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/AbagnaleApp.d",
+    "object": "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/AbagnaleApp.swift.o",
+    "swiftmodule": "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/AbagnaleApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/AbagnaleApp.swiftdeps"
+  },
+  "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/main.swift": {
+    "dependencies": "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.d",
+    "object": "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.swift.o",
+    "swiftmodule": "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.swiftdeps"
+  }
+}

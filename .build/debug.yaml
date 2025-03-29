@@ -1,0 +1,81 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "PackageStructure": ["<PackageStructure>"]
+  "abagnale-arm64-apple-macosx15.0-debug.exe": ["<abagnale-arm64-apple-macosx15.0-debug.exe>"]
+  "abagnale-arm64-apple-macosx15.0-debug.module": ["<abagnale-arm64-apple-macosx15.0-debug.module>"]
+  "main": ["<abagnale-arm64-apple-macosx15.0-debug.exe>","<abagnale-arm64-apple-macosx15.0-debug.module>"]
+  "test": ["<abagnale-arm64-apple-macosx15.0-debug.exe>","<abagnale-arm64-apple-macosx15.0-debug.module>"]
+default: "main"
+nodes:
+  "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale":
+    is-mutated: true
+commands:
+  "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale-entitlement.plist":
+    tool: write-auxiliary-file
+    inputs: ["<entitlement-plist>","<com.apple.security.get-task-allow>"]
+    outputs: ["/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale-entitlement.plist"]
+    description: "Write auxiliary file /Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale-entitlement.plist"
+
+  "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/griffinstrier/projects/Abagnale/Sources/abagnale/AbagnaleApp.swift","/Users/griffinstrier/projects/Abagnale/Sources/abagnale/main.swift"]
+    outputs: ["/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/sources"]
+    description: "Write auxiliary file /Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/sources"
+
+  "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/AbagnaleApp.swift.o","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.swift.o"]
+    outputs: ["/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.product/Objects.LinkFileList"
+
+  "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/Library/Developer/CommandLineTools/usr/bin/swiftc"]
+    outputs: ["/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+
+  "<abagnale-arm64-apple-macosx15.0-debug.exe>":
+    tool: phony
+    inputs: ["<abagnale-arm64-apple-macosx15.0-debug.exe-CodeSigning>"]
+    outputs: ["<abagnale-arm64-apple-macosx15.0-debug.exe>"]
+
+  "<abagnale-arm64-apple-macosx15.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/AbagnaleApp.swift.o","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.swift.o","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/Modules/abagnale.swiftmodule"]
+    outputs: ["<abagnale-arm64-apple-macosx15.0-debug.module>"]
+
+  "C.abagnale-arm64-apple-macosx15.0-debug.exe":
+    tool: shell
+    inputs: ["/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/AbagnaleApp.swift.o","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.swift.o","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.product/Objects.LinkFileList"]
+    outputs: ["/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale"]
+    description: "Linking ./.build/arm64-apple-macosx/debug/abagnale"
+    args: ["/Library/Developer/CommandLineTools/usr/bin/swiftc","-L","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug","-o","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale","-module-name","abagnale","-Xlinker","-no_warn_duplicate_libraries","-emit-executable","-Xlinker","-alias","-Xlinker","_abagnale_main","-Xlinker","_main","-Xlinker","-rpath","-Xlinker","@loader_path","@/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.product/Objects.LinkFileList","-target","arm64-apple-macosx12.0","-Xlinker","-add_ast_path","-Xlinker","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/Modules/abagnale.swiftmodule","-F","/Library/Developer/CommandLineTools/Library/Developer/Frameworks","-sdk","/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk","-g","-Xlinker","-rpath","-Xlinker","/Library/Developer/CommandLineTools/Library/Developer/Frameworks"]
+
+  "C.abagnale-arm64-apple-macosx15.0-debug.exe-entitlements":
+    tool: shell
+    inputs: ["/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale-entitlement.plist"]
+    outputs: ["<abagnale-arm64-apple-macosx15.0-debug.exe-CodeSigning>"]
+    description: "Applying debug entitlements to ./.build/arm64-apple-macosx/debug/abagnale"
+    args: ["codesign","--force","--sign","-","--entitlements","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale-entitlement.plist","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale"]
+
+  "C.abagnale-arm64-apple-macosx15.0-debug.module":
+    tool: shell
+    inputs: ["/Users/griffinstrier/projects/Abagnale/Sources/abagnale/AbagnaleApp.swift","/Users/griffinstrier/projects/Abagnale/Sources/abagnale/main.swift","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/sources"]
+    outputs: ["/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/AbagnaleApp.swift.o","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.swift.o","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/Modules/abagnale.swiftmodule"]
+    description: "Compiling Swift Module 'abagnale' (2 sources)"
+    args: ["/Library/Developer/CommandLineTools/usr/bin/swiftc","-module-name","abagnale","-emit-dependencies","-emit-module","-emit-module-path","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/Modules/abagnale.swiftmodule","-output-file-map","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/output-file-map.json","-incremental","-c","@/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/sources","-I","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx12.0","-enable-batch-mode","-index-store-path","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-j16","-DSWIFT_PACKAGE","-DDEBUG","-module-cache-path","/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-Xfrontend","-entry-point-function-name","-Xfrontend","abagnale_main","-color-diagnostics","-swift-version","5","-parse-as-library","-F","/Library/Developer/CommandLineTools/Library/Developer/Frameworks","-sdk","/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk","-g","-Xcc","-isysroot","-Xcc","/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk","-Xcc","-fPIC","-Xcc","-g"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/Users/griffinstrier/projects/Abagnale/Sources/abagnale/","/Users/griffinstrier/projects/Abagnale/Package.swift","/Users/griffinstrier/projects/Abagnale/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+
