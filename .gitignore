@@ -24,12 +24,6 @@ env/
 build/
 dist/
 *.egg-info/
-.build/
-.swiftpm/
-.swift-version
-.**-apple-darwin*
-abagnale.app/
-
 
 # Logs and databases
 *.log
