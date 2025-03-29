@@ -3,7 +3,20 @@
 
   ],
   "copyCommands" : {
-
+    "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale_abagnale.bundle/logo.png" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/Resources/logo.png"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale_abagnale.bundle/logo.png"
+        }
+      ]
+    }
   },
   "explicitTargetDependencyImportCheckingMode" : {
     "none" : {
@@ -32,7 +45,15 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/DerivedSources/resource_bundle_accessor.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<abagnale-arm64-apple-macosx15.0-debug.module-resources>"
         },
         {
           "kind" : "file",
@@ -44,7 +65,8 @@
       "moduleOutputPath" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/Modules/abagnale.swiftmodule",
       "objects" : [
         "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/AbagnaleApp.swift.o",
-        "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.swift.o"
+        "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.swift.o",
+        "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/resource_bundle_accessor.swift.o"
       ],
       "otherArguments" : [
         "-target",
@@ -94,13 +116,18 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/Modules/abagnale.swiftmodule"
         }
       ],
       "prepareForIndexing" : false,
       "sources" : [
         "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/AbagnaleApp.swift",
-        "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/main.swift"
+        "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/main.swift",
+        "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/DerivedSources/resource_bundle_accessor.swift"
       ],
       "tempsPath" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build",
       "wholeModuleOptimization" : false
@@ -118,6 +145,7 @@
       "-c",
       "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/AbagnaleApp.swift",
       "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/main.swift",
+      "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/DerivedSources/resource_bundle_accessor.swift",
       "-I",
       "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/Modules",
       "-target",
@@ -198,6 +226,10 @@
         {
           "kind" : "file",
           "name" : "/Users/griffinstrier/projects/Abagnale/Sources/abagnale/main.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/DerivedSources/resource_bundle_accessor.swift"
         }
       ],
       "outputFilePath" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/sources"
@@ -216,6 +248,10 @@
         {
           "kind" : "file",
           "name" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/main.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.build/resource_bundle_accessor.swift.o"
         }
       ],
       "outputFilePath" : "/Users/griffinstrier/projects/Abagnale/.build/arm64-apple-macosx/debug/abagnale.product/Objects.LinkFileList"

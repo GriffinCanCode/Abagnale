@@ -13,6 +13,10 @@ cp .build/debug/abagnale abagnale.app/Contents/MacOS/
 # Copy the Info.plist
 cp Sources/abagnale/Resources/Info.plist abagnale.app/Contents/
 
+# Copy the resources
+cp Sources/abagnale/Resources/logo.png abagnale.app/Contents/Resources/
+cp Sources/abagnale/Resources/abagnale.icns abagnale.app/Contents/Resources/
+
 # Make the app executable
 chmod +x abagnale.app/Contents/MacOS/abagnale
 

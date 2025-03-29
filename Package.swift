@@ -16,6 +16,9 @@ let package = Package(
         .executableTarget(
             name: "abagnale",
             dependencies: [],
+            resources: [
+                .process("Resources/logo.png")
+            ],
             swiftSettings: [
                 .unsafeFlags(["-parse-as-library"])
             ]),

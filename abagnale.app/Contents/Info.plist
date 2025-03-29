@@ -2,9 +2,37 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>NSCameraUseContinuityCameraDeviceType</key>
-    <true/>
+    <key>CFBundleIconFile</key>
+    <string>abagnale.icns</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.abagnale.app</string>
+    <key>CFBundleName</key>
+    <string>abagnale</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.3</string>
     <key>NSCameraUsageDescription</key>
     <string>This app needs access to your camera to apply visual effects.</string>
+    <key>NSCameraUseContinuityCameraDeviceType</key>
+    <true/>
+    <key>NSSystemExtensionUsageDescription</key>
+    <string>This app needs to install a system extension to provide virtual camera functionality.</string>
+    <key>CMIOExtension</key>
+    <dict>
+        <key>CMIOExtensionMachServiceName</key>
+        <string>com.abagnale.virtual-camera</string>
+        <key>CMIOExtensionBuiltin</key>
+        <false/>
+    </dict>
+    <key>NSExtension</key>
+    <dict>
+        <key>NSExtensionPointIdentifier</key>
+        <string>com.apple.CoreMediaIO.camera-device</string>
+        <key>NSExtensionPrincipalClass</key>
+        <string>$(PRODUCT_MODULE_NAME).VirtualCameraExtension</string>
+    </dict>
 </dict>
 </plist> 

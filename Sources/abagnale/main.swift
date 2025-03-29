@@ -9,6 +9,8 @@
 import Cocoa
 import AVFoundation
 import CoreImage
+import CoreMediaIO
+import SystemExtensions
 
 // MARK: - Main Application
 
@@ -53,6 +55,8 @@ class MainView: NSView {
     private let previewView: NSView
     private let effectsListView: NSTableView
     private let startStopButton: NSButton
+    private let applyEffectButton: NSButton
+    private var selectedEffect: String?
     
     init(frame: NSRect, effectsController: EffectsController) {
         self.effectsController = effectsController
@@ -79,12 +83,19 @@ class MainView: NSView {
         self.startStopButton.title = "Stop Camera"
         self.startStopButton.bezelStyle = .rounded
         
+        // Create the apply effect button
+        self.applyEffectButton = NSButton(frame: NSRect(x: frame.width - 180, y: 60, width: 160, height: 30))
+        self.applyEffectButton.title = "Apply Effect"
+        self.applyEffectButton.bezelStyle = .rounded
+        self.applyEffectButton.isEnabled = false
+        
         super.init(frame: frame)
         
         // Add subviews
         addSubview(previewView)
         addSubview(scrollView)
         addSubview(startStopButton)
+        addSubview(applyEffectButton)
         
         // Setup effects list table view
         effectsListView.delegate = self
@@ -93,9 +104,12 @@ class MainView: NSView {
         // Setup preview view
         effectsController.setPreviewLayer(in: previewView.layer!)
         
-        // Setup start/stop button
+        // Setup buttons
         startStopButton.target = self
         startStopButton.action = #selector(toggleCamera)
+        
+        applyEffectButton.target = self
+        applyEffectButton.action = #selector(applyEffect)
     }
     
     required init?(coder: NSCoder) {
@@ -109,6 +123,12 @@ class MainView: NSView {
         } else {
             effectsController.start()
             startStopButton.title = "Stop Camera"
+        }
+    }
+    
+    @objc func applyEffect() {
+        if let effect = selectedEffect {
+            effectsController.setEffect(effect)
         }
     }
 }
@@ -131,19 +151,161 @@ extension MainView: NSTableViewDelegate, NSTableViewDataSource {
     func tableViewSelectionDidChange(_ notification: Notification) {
         let selectedRow = effectsListView.selectedRow
         if selectedRow >= 0 {
-            let effect = effectsController.availableEffects[selectedRow]
-            effectsController.setEffect(effect)
+            selectedEffect = effectsController.availableEffects[selectedRow]
+            applyEffectButton.isEnabled = true
+        } else {
+            selectedEffect = nil
+            applyEffectButton.isEnabled = false
         }
     }
 }
 
 // MARK: - Effects Controller
 
+@available(macOS 12.3, *)
+class VirtualCameraExtension: NSObject, CMIOExtensionProviderSource, CMIOExtensionStreamSource {
+    private(set) var provider: CMIOExtensionProvider?
+    private var device: CMIOExtensionDevice?
+    private var stream: CMIOExtensionStream?
+    private var bufferPool: CMIOExtensionDeviceBufferPool?
+    private var timer: Timer?
+    private var sequenceNumber: UInt64 = 0
+    private var currentImage: CGImage?
+    
+    let deviceUID = "com.abagnale.virtual-camera.device"
+    let streamUID = "com.abagnale.virtual-camera.stream"
+    
+    override init() {
+        super.init()
+        setupProvider()
+    }
+    
+    func updateFrame(_ image: CGImage) {
+        self.currentImage = image
+    }
+    
+    private func setupProvider() {
+        do {
+            provider = try CMIOExtensionProvider(source: self)
+            try provider?.setAuthorizedProperties([CMIOExtensionProperty.deviceTransportType])
+            
+            let deviceProperties = CMIOExtensionDeviceProperties(transportType: kIOAudioDeviceTransportTypeBuiltIn)
+            let device = CMIOExtensionDevice(properties: deviceProperties,
+                                           deviceID: deviceUID,
+                                           name: "Abagnale Camera Effects",
+                                           manufacturer: "Abagnale",
+                                           source: self)
+            try provider?.addDevice(device)
+            self.device = device
+            
+            let dimensions = CMVideoDimensions(width: 1280, height: 720)
+            let streamFormat = try CMIOExtensionStreamFormat.init(formatDescription: CMFormatDescription.make(videoCodecType: .jpeg,
+                                                                                                             width: dimensions.width,
+                                                                                                             height: dimensions.height))
+            let streamProperties = CMIOExtensionStreamProperties()
+            let stream = CMIOExtensionStream(properties: streamProperties,
+                                           streamID: streamUID,
+                                           streamFormat: streamFormat,
+                                           device: device,
+                                           source: self)
+            try device.addStream(stream)
+            self.stream = stream
+            
+            self.bufferPool = try .init(pixelBufferAttributes: [
+                kCVPixelBufferWidthKey: dimensions.width,
+                kCVPixelBufferHeightKey: dimensions.height,
+                kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferMetalCompatibilityKey: true
+            ] as [String: Any])
+            
+            startStreaming()
+        } catch {
+            print("Failed to create virtual camera: \(error)")
+        }
+    }
+    
+    func startStreaming() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0/30.0, repeats: true) { [weak self] _ in
+            self?.sendFrame()
+        }
+    }
+    
+    func stopStreaming() {
+        timer?.invalidate()
+        timer = nil
+    }
+    
+    private func sendFrame() {
+        guard let pool = bufferPool,
+              let stream = stream,
+              let currentImage = currentImage else { return }
+        
+        do {
+            let timing = CMIOExtensionTimingInfo(timestamp: CMTime(value: CMClockGetTime(CMClockGetHostTimeClock()),
+                                                                  timescale: 1000000000),
+                                               duration: CMTime(value: 1, timescale: 30))
+            
+            var pixelBuffer: CVPixelBuffer?
+            CVPixelBufferCreate(kCFAllocatorDefault,
+                              Int(currentImage.width),
+                              Int(currentImage.height),
+                              kCVPixelFormatType_32BGRA,
+                              nil,
+                              &pixelBuffer)
+            
+            if let pixelBuffer = pixelBuffer {
+                CVPixelBufferLockBaseAddress(pixelBuffer, [])
+                let context = CGContext(data: CVPixelBufferGetBaseAddress(pixelBuffer),
+                                      width: Int(currentImage.width),
+                                      height: Int(currentImage.height),
+                                      bitsPerComponent: 8,
+                                      bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)
+                context?.draw(currentImage, in: CGRect(x: 0, y: 0, width: currentImage.width, height: currentImage.height))
+                CVPixelBufferUnlockBaseAddress(pixelBuffer, [])
+                
+                try stream.sendBuffer(pixelBuffer,
+                                    with: timing,
+                                    sequenceNumber: sequenceNumber)
+                sequenceNumber += 1
+            }
+        } catch {
+            print("Failed to send frame: \(error)")
+        }
+    }
+    
+    // MARK: - CMIOExtensionProviderSource
+    
+    func connect(to provider: CMIOExtensionProvider) throws { }
+    
+    func disconnect(from provider: CMIOExtensionProvider) { }
+    
+    // MARK: - CMIOExtensionStreamSource
+    
+    func streamProperties(forProperties properties: Set<CMIOExtensionProperty>) throws -> CMIOExtensionStreamProperties {
+        return CMIOExtensionStreamProperties()
+    }
+    
+    func deviceProperties(forProperties properties: Set<CMIOExtensionProperty>) throws -> CMIOExtensionDeviceProperties {
+        return CMIOExtensionDeviceProperties()
+    }
+    
+    func authorizedToStartStream(for client: CMIOExtensionClient) -> Bool { true }
+    
+    func startStream() throws { }
+    
+    func stopStream() throws { }
+}
+
 class EffectsController: NSObject {
     // Camera session
     private let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
-    private var previewLayer: AVCaptureVideoPreviewLayer?
+    private var previewLayer: CALayer?
+    
+    // Virtual camera
+    private var virtualCamera: VirtualCameraExtension?
     
     // Image processing
     private let context = CIContext()
@@ -151,6 +313,10 @@ class EffectsController: NSObject {
     
     // State
     var isRunning: Bool = false
+    private var isPaused: Bool = false
+    private var lastFrame: CIImage?
+    private var transitionTimer: Timer?
+    private var transitionProgress: CGFloat = 0.0
     
     // Available effects
     let availableEffects = [
@@ -172,28 +338,61 @@ class EffectsController: NSObject {
         
         // Check camera permissions first
         checkCameraPermissions()
+        
+        // Setup virtual camera if supported
+        if #available(macOS 12.3, *) {
+            setupVirtualCamera()
+        } else {
+            print("Virtual camera requires macOS 12.3 or later")
+        }
     }
     
     func setPreviewLayer(in layer: CALayer) {
         // Create and add preview layer
-        let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        let previewLayer = CALayer()
         previewLayer.frame = layer.bounds
-        previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.contentsGravity = .resizeAspectFill
         layer.addSublayer(previewLayer)
         self.previewLayer = previewLayer
+    }
+    
+    private func setupVirtualCamera() {
+        if #available(macOS 12.3, *) {
+            virtualCamera = VirtualCameraExtension()
+        }
     }
     
     func start() {
         if !isRunning {
             captureSession.startRunning()
+            if #available(macOS 12.3, *) {
+                virtualCamera?.startStreaming()
+            }
             isRunning = true
+            isPaused = false
+            transitionProgress = 0.0
+            transitionTimer?.invalidate()
+            transitionTimer = nil
         }
     }
     
     func stop() {
         if isRunning {
-            captureSession.stopRunning()
-            isRunning = false
+            isPaused = true
+            transitionProgress = 0.0
+            transitionTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
+                guard let self = self else { return }
+                self.transitionProgress += 0.1
+                if self.transitionProgress >= 1.0 {
+                    self.transitionTimer?.invalidate()
+                    self.transitionTimer = nil
+                    self.captureSession.stopRunning()
+                    if #available(macOS 12.3, *) {
+                        self.virtualCamera?.stopStreaming()
+                    }
+                    self.isRunning = false
+                }
+            }
         }
     }
     
@@ -268,13 +467,6 @@ class EffectsController: NSObject {
             }
             
             print("Effect successfully changed to: \(effectName)")
-            
-            // Force an immediate frame update
-            DispatchQueue.main.async { [weak self] in
-                if let previewLayer = self?.previewLayer {
-                    previewLayer.setNeedsDisplay()
-                }
-            }
         }
     }
     
@@ -357,6 +549,26 @@ extension EffectsController: AVCaptureVideoDataOutputSampleBufferDelegate {
         // Create CIImage from the pixel buffer
         var ciImage = CIImage(cvPixelBuffer: pixelBuffer)
         
+        // Store the last frame if we're paused
+        if isPaused {
+            lastFrame = ciImage
+        }
+        
+        // Apply transition effect if we're in the process of stopping
+        if transitionProgress > 0 && transitionProgress < 1.0 {
+            if let lastFrame = lastFrame {
+                // Create a blend between the last frame and current frame
+                let blendFilter = CIFilter(name: "CIBlendWithMask")
+                blendFilter?.setValue(lastFrame, forKey: kCIInputBackgroundImageKey)
+                blendFilter?.setValue(ciImage, forKey: kCIInputImageKey)
+                let maskImage = CIImage(color: CIColor(red: transitionProgress, green: transitionProgress, blue: transitionProgress))
+                blendFilter?.setValue(maskImage, forKey: kCIInputMaskImageKey)
+                if let blendedImage = blendFilter?.outputImage {
+                    ciImage = blendedImage
+                }
+            }
+        }
+        
         // Apply filter if one is selected
         if let filter = currentFilter {
             filter.setValue(ciImage, forKey: kCIInputImageKey)
@@ -372,6 +584,9 @@ extension EffectsController: AVCaptureVideoDataOutputSampleBufferDelegate {
             guard let self = self else { return }
             if let cgImage = self.context.createCGImage(ciImage, from: ciImage.extent) {
                 self.previewLayer?.contents = cgImage
+                if #available(macOS 12.3, *) {
+                    self.virtualCamera?.updateFrame(cgImage)
+                }
             } else {
                 print("Failed to create CGImage from CIImage")
             }
